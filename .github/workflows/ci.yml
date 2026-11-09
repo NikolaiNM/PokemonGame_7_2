@@ -1,0 +1,43 @@
+name: Run Automation Tests
+
+# Триггеры: когда запускать пайплайн
+on:
+  push:
+    branches: [ "main"]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # Позволяет запускать вручную через вкладку Actions
+
+jobs:
+  test:
+    name: Run Tests on Ubuntu
+    runs-on: ubuntu-latest # Используем свежий Linux-раннер
+
+    steps:
+      # 1. Скачиваем код из репозитория
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем Java 17 (GraalVM или Temurin)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin' # Стабильный и быстрый дистрибутив
+          cache: maven # Включаем кэширование зависимостей Maven (ускоряет запуск!)
+
+      # 3. Запускаем тесты
+      - name: Run Maven Tests
+        env:
+          # Передаем секреты из настроек GitHub в переменные окружения или напрямую в Maven
+          TEST_LOGIN: ${{ secrets.TEST_LOGIN }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          echo "🚀 Запуск тестов в headless режиме..."
+          # -Dheadless=true критически важен для Linux-серверов без GUI!
+          # -Denv=prod указывает, где запускать
+          mvn clean test \
+            -Dheadless=true \
+            -Denv=prod \
+            -Dtest.login=$TEST_LOGIN \
+            -Dtest.password=$TEST_PASSWORD
