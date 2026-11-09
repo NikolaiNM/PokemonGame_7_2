@@ -41,3 +41,11 @@ jobs:
             -Denv=prod \
             -Dtest.login=$TEST_LOGIN \
             -Dtest.password=$TEST_PASSWORD
+      # 4. Сохраняем скриншоты, если тесты упали
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: target/screenshots/
+          retention-days: 3
